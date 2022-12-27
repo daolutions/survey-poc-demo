@@ -18,7 +18,10 @@
       await import('$lib/keycloak-js/dist/keycloak.js').then(Keycloak => {
         //test = Keyloak.default
           //let k = test(instance);
-        let k = window.Keycloak(instance);
+        //console.log(Keycloak.default)
+        //console.log(window)
+        //window.Keyloak = Keycloak.default
+        let k = Keycloak.default(instance);
         //console.log(window)
         //const k = new Keycloak().default();
         //console.log(k)
