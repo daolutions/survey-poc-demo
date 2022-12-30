@@ -1,8 +1,11 @@
 <script>
-  import dayjsCJS from 'dayjs'
-  import dayjsESM from 'dayjs/esm'
+  //import dayjsCJS from 'dayjs'
+  //import dayjsESM from 'dayjs/esm'
 
-  let dayjs = !dayjsCJS ? dayjsESM : dayjsCJS
+  import dayjs from 'dayjs'
+
+  //export const ssr = false;
+  //let dayjs = !dayjsCJS ? dayjsESM : dayjsCJS
 
   export let date = new Date();
 
