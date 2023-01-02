@@ -17,7 +17,7 @@ export async function load({ params }) {
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-  default: async (event) => {
+  createSurvey: async (event) => {
     //console.log('default action', event);
     //console.log('default action', supabase);
     /* Deleting CASCADE in Supabase: 
@@ -53,5 +53,19 @@ export const actions = {
       console.log('surveyWithRevisionError', surveyWithRevisionError);
     }
     console.log('data', surveyWithRevisionData);
-  }
+  },
+  setName: async (event) => {
+    const formData = await event.request.formData();
+    const newName = formData.get('name');
+    const surveyId = formData.get('id');
+    console.log('path',event.url.pathname)
+    console.log('formData', formData.get('name'))
+    const { data: surveyData, error: surveyDataError } = await supabase
+      .from('survey')
+      .update({ name: newName })
+      .eq('id', surveyId)
+    if(surveyDataError) {
+      console.log('surveyDataError', surveyDataError);
+    }
+  },
 }

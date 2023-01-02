@@ -5,6 +5,7 @@
     import DataTable, { Head, Body, Row, Cell } from '@smui/data-table';
     import Paper, { Title, Subtitle, Content } from '@smui/paper';
     import Date from '$lib/components/Date.svelte';
+    import SingleUpdateAction from '$lib/components/SingleUpdateAction.svelte';
 
 
 
@@ -17,7 +18,7 @@
 
 <h1>Surveys</h1>
 
-<form method="POST">
+<form method="POST" action="?/createSurvey">
   <Button color="secondary" variant="raised">
     <Label>Create new Survey</Label>
   </Button>
@@ -34,7 +35,7 @@
       <Body>
         {#each surveys as survey}
         <Row on:click={() => goto(`survey/edit/${survey?.actual_revision.id}`)}>
-          <Cell>{survey.name || 'Unnamed Survey'}</Cell>
+          <Cell><SingleUpdateAction action="setName" name="name" id={survey?.id} value={survey?.name} placeholder="Unnamed Survey" /></Cell>
           <Cell><Date date={survey.created_at} /></Cell>
         </Row>
         {/each}

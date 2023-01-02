@@ -7,9 +7,15 @@ export async function load({ params }) {
     .from('survey_revision')
     .select(`
       *,
-      survey!survey_actual_revision_fkey (*)
+      survey!survey_actual_revision_fkey (*),
+      section (
+        *,
+        group (*)
+      )
     `)
     .eq('id', params.slug)
+    .order('created_at', { foreignTable: 'section', ascending: true })
+  console.log('error', error)
   return {
     survey: data?.[0]
   };
@@ -34,5 +40,31 @@ export const actions = {
   setVersion: async ({request}) => {
     const data = await request.formData();
     console.log(data)
+  },
+  setSectionName: async ({request}) => {
+    const formData = await request.formData();
+    const newName = formData.get('name');
+    const sectionId = formData.get('id');
+    const { data: sectionData, error: sectionDataError } = await supabase
+      .from('section')
+      .update({ name: newName })
+      .eq('id', sectionId)
+    if(sectionDataError) {
+      console.log('sectionDataError', sectionDataError);
+    }
+  },
+  setGroupName: async ({request}) => {
+    const formData = await request.formData();
+    const newName = formData.get('name');
+    const groupId = formData.get('id');
+    const { data: groupData, error: groupDataError } = await supabase
+      .from('group')
+      .update({ name: newName })
+      .eq('id', groupId)
+    if(groupDataError) {
+      console.log('groupDataError', groupDataError);
+    }
   }
+
+
 };
