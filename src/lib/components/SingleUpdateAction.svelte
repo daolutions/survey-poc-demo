@@ -7,25 +7,32 @@
   export let name
   export let value
   export let placeholder = 'no entry'
+
+  let elem
   let editable = false
 
   let actionForm
   let newValue
 
-  async function doAction() {
-    editable = false
-    if (document?.getElementById(action+'-'+name+'-'+id)){
-      newValue = document.getElementById(action+'-'+name+'-'+id).innerText
-      if (newValue !== value) {
-        console.log('saving action', newValue)
-        await tick()
-        actionForm.submit()
+  async function doAction(e) {
+    if(e.relatedTarget || e.key === 'Enter'){
+      console.log('doAction', e)
+      if (elem){
+        newValue = elem.innerText
+        if (newValue !== value) {
+          console.log('saving action', newValue)
+          await tick()
+          actionForm.submit()
+        }
       }
+    } else if(editable && e.key !== 'Enter') {
+      console.log('HALLO', e)
+      elem.innerText = value
     }
+    editable = false
   }
 
   $: if (editable) {
-    const elem = document.getElementById(action+'-'+name+'-'+id)
     tick().then(() => {
       elem.focus()
       window.getSelection().selectAllChildren(elem);
@@ -34,9 +41,14 @@
 
   function handleKeydown(event) {
 		if(event.key === 'Escape') {
+      event.stopPropagation();
+      event.preventDefault();
       editable = false
-    } else if (event.key === 'Enter') {
-      doAction()
+      elem.innerText = value
+    } else if (event.key === 'Enter' && editable) {
+      event.preventDefault();
+      console.log('enter', event)
+      doAction(event)
     }
 	}
 
@@ -47,18 +59,38 @@
 <form method="POST" action="?/{action}" bind:this={actionForm}>
   <input type="hidden" name={name} bind:value={newValue} />
   <input type="hidden" name="id" value={id} />
-  <span id="{action}-{name}-{id}" contenteditable={editable} on:blur={doAction}>
+  <span class="inline-edit" class:shadow={!value} bind:this={elem} contenteditable={editable} on:blur={doAction}>
 	  {value || placeholder}
   </span>
   {#if !editable}
-    <IconButton class="material-icons" on:click={(e) => {e.stopPropagation(); editable = true}} ripple={false} size="button">edit</IconButton>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <span on:click|preventDefault|stopPropagation={() => editable = true}>
+      <IconButton class="material-icons start-edit" ripple={false} size="button">edit</IconButton>
+    </span>
   {:else}
-    <IconButton class="material-icons" on:click={(e) => {e.stopPropagation(); doAction()}} ripple={false} size="button">save</IconButton>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <span on:click|preventDefault|stopPropagation={doAction}>
+      <IconButton class="material-icons" ripple={false} size="button">save</IconButton>
+    </span>
   {/if}
 </form>
 
 <style>
   form {
     display: inline;
+    line-height: 42px;
+  }
+  .inline-edit {
+    display: inline-block;
+    border: 1px solid transparent;
+  }
+  form :global(.start-edit)  {
+    display: none;
+  }
+  form:hover :global(.start-edit)  {
+    display: inline-block;
+  }
+  .shadow {
+    opacity: 0.5;
   }
 </style>

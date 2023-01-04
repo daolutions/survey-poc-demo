@@ -10,7 +10,12 @@ export async function load({ params }) {
       survey!survey_actual_revision_fkey (*),
       section (
         *,
-        group (*)
+        group (
+          *,
+          element (
+            *
+          )
+        )
       )
     `)
     .eq('id', params.slug)
