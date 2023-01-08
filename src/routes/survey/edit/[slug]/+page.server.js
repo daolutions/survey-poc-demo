@@ -13,7 +13,7 @@ export async function load({ params }) {
         group (
           *,
           element (
-            *
+            id, type, json_data, group_id
           )
         )
       )

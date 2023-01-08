@@ -16,6 +16,7 @@
     console.log('surveys', surveys)
 </script>
 
+<div class="container">
 <h1>Surveys</h1>
 
 <form method="POST" action="?/createSurvey">
@@ -42,3 +43,4 @@
       </Body>
     </DataTable>
 
+</div>

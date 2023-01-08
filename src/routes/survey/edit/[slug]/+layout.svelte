@@ -4,7 +4,7 @@
 
 <style>
  
-  :global(.container), .full-size {
+  .full-size {
     width: 100% !important;
     height: 100%;
     padding: 0 !important;

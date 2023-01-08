@@ -1,5 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { selectedElement } from '$lib/Stores.js';
+
   import Drawer, { AppContent, Content, Header, Title } from '@smui/drawer'; 
   import IconButton from '@smui/icon-button';
   import List, { Item, Text } from '@smui/list';
@@ -14,6 +16,10 @@
   $: sections = data?.section || [];
 
   const dispatch = createEventDispatcher();
+
+  function setSelectedElement(element) {
+    selectedElement.set(element);
+  }
 
   //console.log('data', data)
 </script>
@@ -31,9 +37,11 @@
                 <div class="group-header"><SingleUpdateAction action="setGroupName" name="name" id={group?.id} value={group?.name} placeholder="Unnamed Group" /></div>
                 <List class="element-list">
                   {#each group?.element as element}
-                    <Item on:click="{() => dispatch('editelement', element?.id)}">
-                      <Text>{element?.name || 'Unnamed element'}</Text>
-                    </Item>
+                    <span class:selected={$selectedElement?.id == element?.id} class="element-menu-item">
+                      <Item  on:click="{() => {setSelectedElement(element); dispatch('editelement', element?.id)}}">
+                        <Text>{($selectedElement?.id == element?.id ? $selectedElement.name : element?.name) || 'New element'}</Text>
+                      </Item>
+                    </span>
                   {/each}
                 </List>
                 <IconButton class="material-icons quick-add-element" on:click="{() => dispatch('addelement', group?.id)}" ripple={false} size="button">add</IconButton>

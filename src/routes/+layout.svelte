@@ -17,7 +17,7 @@
   })
 </script>
 
-<div class="container">
+<div class="main-container">
   <slot />
 </div>
 

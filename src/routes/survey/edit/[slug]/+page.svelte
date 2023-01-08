@@ -2,10 +2,16 @@
   import IconButton from '@smui/icon-button';
   import Button from '@smui/button';
   import Fab, { Label, Icon } from '@smui/fab';
+  import Card, { PrimaryAction  } from '@smui/card';
   import { page } from '$app/stores'
-  import {  invalidateAll } from '$app/navigation';
+  import {  goto, invalidateAll } from '$app/navigation';
+
+  import { selectedElement, currentSurvey } from '$lib/Stores.js';
 
   import SingleUpdateAction from '$lib/components/SingleUpdateAction.svelte';
+  import Likert from '$lib/components/elements/Likert.svelte';
+  import SingleChoice from '$lib/components/elements/SingleChoice.svelte';
+  import Dropdown from '$lib/components/elements/Dropdown.svelte';
   //import Section from '$lib/components/Section.svelte';
   //import Group from '$lib/components/Group.svelte';
   import Paper, { Title, Subtitle, Content } from '@smui/paper';
@@ -13,51 +19,50 @@
 
   import SurveyMenu from '$lib/components/SurveyMenu.svelte';
 
-  import { tick } from 'svelte';
+  import { onDestroy } from 'svelte';
 
   /** @type {import('./$types').PageData} */
   export let data;
 
-  $: survey = data?.survey
+  currentSurvey.set(data?.survey)
 
-  let editName = false
+  //$: survey = data?.survey
+
+  console.log($currentSurvey)
+
+  $: if(!$selectedElement) {
+    if($currentSurvey?.section?.[0].group?.[0].element?.length > 0) {
+      selectedElement.set($currentSurvey.section[0].group[0].element[0])
+    }
+  }
+
+  onDestroy(() => selectedElement.set(null));
+
   let newName
   let nameForm
 
   let drawerOpen = true
 
-
-  async function saveName() {
-    editName = false
-    if (document?.getElementById('survey-name')){
-      newName = document.getElementById('survey-name').innerText
-      if (newName !== survey.survey.name) {
-        survey.survey.name = newName
-        console.log('saving', newName)
-        await tick()
-        nameForm.submit()
-      }
-    }
+  const elementTypes = {
+    'singlechoice': {
+      component: SingleChoice,
+      name: 'Single Choice',
+    },
+    'likert': {
+      component: Likert,
+      name: 'Likert Scale',
+    },
+    'dropdown': {
+      component: Dropdown,
+      name: 'Dropdown List',
+    },
   }
 
-  $: if (editName) {
-    const span = document.getElementById('survey-name')
-    tick().then(() => {
-      span.focus()
-      window.getSelection().selectAllChildren(span);
-    });
-  }
-
-  // async function addSection() {
-  //   console.log('addSection')
-  // }
-
-  let total = 0;
-
+  // ADDING SECTIONS
   async function addSection() {
     const response = await fetch('/api/section/add', {
       method: 'POST',
-      body: JSON.stringify({ survey_id: survey.id }),
+      body: JSON.stringify({ survey_id: $currentSurvey.id }),
       headers: {
         'content-type': 'application/json'
       }
@@ -66,6 +71,8 @@
     await response.json();
     await invalidateAll(true);
   }
+
+  // ADDING GROUPS
   function receiceAddGroup(e) {
     console.log('add group', e.detail)
     addGroup(e.detail)
@@ -82,6 +89,8 @@
     await response.json();
     await invalidateAll(true);
   }
+
+  // ADDING ELEMENTS
   function receiceAddElement(e) {
     console.log('add element', e.detail)
     addElement(e.detail)
@@ -99,60 +108,66 @@
     await invalidateAll(true);
   }
 
-  let selectedElement = null;
-  function receiceGetElementById(e) {
-    console.log('get element', e.detail)
-    getElementById(e.detail)
-  }
-  async function getElementById(id) {
-    const response = await fetch('/api/element/get', {
+  // SAVING ELEMENTS
+  async function saveElement(e) {
+    let element = e.detail
+    const response = await fetch('/api/element/set', {
       method: 'POST',
-      body: JSON.stringify({ id }),
+      body: JSON.stringify( element ),
       headers: {
         'content-type': 'application/json'
       }
     });
 
-    selectedElement = await response.json();
-    //await invalidateAll(true);
+    let updatedElement = await response.json();
+    selectedElement.set(updatedElement);
   }
 
 </script>
 
-<SurveyMenu data={survey} open={drawerOpen} on:addgroup={receiceAddGroup} on:addelement={receiceAddElement} on:addsection={addSection} on:editelement={receiceGetElementById}>
-  <button on:click={() => drawerOpen = !drawerOpen}>Toggle</button>
+<SurveyMenu data={$currentSurvey} open={drawerOpen} on:addgroup={receiceAddGroup} on:addelement={receiceAddElement} on:addsection={addSection} > <!-- on:getelementbyid={receiceGetElementById} -->
+  <button on:click={() => goto(`/survey`)}>Back to Surveys</button>
+  <!-- <button on:click={() => drawerOpen = !drawerOpen}>Toggle</button> -->
   <h1>
-    <SingleUpdateAction action="setName" name="name" value={survey?.survey?.[0].name} placeholder="Unnamed Survey" />
+    <SingleUpdateAction action="setName" name="name" value={$currentSurvey?.survey?.[0].name} placeholder="Unnamed Survey" />
   </h1>
-  {#if selectedElement}
-    <Paper>
-      <Title>{selectedElement.id}</Title>
-      <Content>
-        CONTENT
-      </Content>
-    </Paper>
+  {#if $selectedElement}
+    {#if $selectedElement.type}
+      <svelte:component this={elementTypes[$selectedElement.type].component} data={$selectedElement} on:save={saveElement}/>
+    {:else}
+      <p>Please select an element type</p>
+        <div class="card-container">
+            {#each Object.keys(elementTypes) as type}
+              <Card padded>
+                <PrimaryAction on:click={() => selectedElement.update(e => {e.type = type; return e})}>
+                  <div class="element-type-icon chosable element-type-icon-{type}">
+                  </div>
+                  <h4>{elementTypes[type].name}</h4>
+                </PrimaryAction>
+              </Card>
+            {/each}
+        </div>
+
+
+    {/if}
   {:else}
     <p>Please select an element</p>
   {/if}
-  <!-- <div>Version: {survey?.version}</div>
 
-  <Fab color="primary" on:click={addSection} extended>
-    <Icon class="material-icons">add_circle</Icon>
-    <Label>Add section</Label>
-  </Fab>
-
-  <div class="sections">
-    {#each survey?.section as section}
-      <Section data={section}>
-        {#each section?.group as group}
-          <Group data={group} />
-        {/each}
-        <Fab color="primary" on:click={() => addGroup(section.id)} extended>
-          <Icon class="material-icons">add_circle</Icon>
-          <Label>Add group</Label>
-        </Fab>
-      </Section>
-    {/each}
-  </div> -->
 </SurveyMenu>
 
+<style lang="scss">
+
+  .card-container {
+    display: flex;
+    gap: 1rem;
+    text-align: center;
+
+    :global(.mdc-card) {
+      background-color: #43a1a7;
+      max-width: 15%;
+      flex: 1 1 0;
+    }
+  }
+
+</style>
