@@ -73,7 +73,7 @@
     </Fab>
   </div>
   <Paper>
-    <Title>{$selectedElement.id}<div class="element-type-icon chosable inverted element-type-icon-{element?.type}"></div></Title>
+    <Title><div class="element-type-icon chosable inverted element-type-icon-{element?.type}"></div></Title>
     <Content>
       <Textfield style="width: 100%;" label="Question" bind:value={elementdata.question} type="text" />
       <Textfield label="Scales" bind:value={currentScales} type="number" />

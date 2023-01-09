@@ -20,6 +20,8 @@ export async function load({ params }) {
     `)
     .eq('id', params.slug)
     .order('created_at', { foreignTable: 'section', ascending: true })
+    .order('created_at', { foreignTable: 'section.group', ascending: true })
+    .order('created_at', { foreignTable: 'section.group.element', ascending: true })
   console.log('error', error)
   return {
     survey: data?.[0]

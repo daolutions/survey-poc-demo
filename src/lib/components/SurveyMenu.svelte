@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { selectedElement } from '$lib/Stores.js';
+  import { currentSurvey, selectedElement } from '$lib/Stores.js';
 
   import Drawer, { AppContent, Content, Header, Title } from '@smui/drawer'; 
   import IconButton from '@smui/icon-button';
@@ -11,9 +11,13 @@
 
   export let open = true;
 
-  export let data;
-
-  $: sections = data?.section || [];
+  //$: sections = data?.section || [];
+  let sections =  [];
+  let surveyName
+  const unsubscribe = currentSurvey.subscribe(value => {
+    sections = value?.section;
+    surveyName = value?.survey?.[0].name
+  });
 
   const dispatch = createEventDispatcher();
 
@@ -27,7 +31,7 @@
 <div class="drawer-container">
   <Drawer bind:open variant="modal" >
     <Header>
-      <Title tabindex="0">{data?.survey?.[0].name}</Title>
+      <Title tabindex="0">{surveyName}</Title>
     </Header>
     <Content>
         {#each sections as section}
@@ -39,7 +43,7 @@
                   {#each group?.element as element}
                     <span class:selected={$selectedElement?.id == element?.id} class="element-menu-item">
                       <Item  on:click="{() => {setSelectedElement(element); dispatch('editelement', element?.id)}}">
-                        <Text>{($selectedElement?.id == element?.id ? $selectedElement.name : element?.name) || 'New element'}</Text>
+                        <Text><span class="element-type-icon inline inverted element-type-icon-{($selectedElement?.id == element?.id ? $selectedElement?.type : element?.type)}"></span>{($selectedElement?.id == element?.id ? ($selectedElement?.json_data?.question || $selectedElement.name) : (element?.json_data?.question || element?.name)) || 'New element'}</Text>
                       </Item>
                     </span>
                   {/each}
@@ -136,6 +140,9 @@
   }
   :global(.element-list) {
     padding: 0;
+  }
+  .element-menu-item.selected :global(.mdc-deprecated-list-item){
+    background-color: #b2dfe2;
   }
   :global(.mdc-icon-button.quick-add-element) {
     padding: 0px;

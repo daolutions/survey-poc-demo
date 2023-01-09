@@ -24,7 +24,7 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  currentSurvey.set(data?.survey)
+  $: currentSurvey.set(data?.survey)
 
   //$: survey = data?.survey
 
@@ -87,7 +87,8 @@
     });
 
     await response.json();
-    await invalidateAll(true);
+    //currentSurvey.set(null)
+    await invalidateAll();
   }
 
   // ADDING ELEMENTS
@@ -121,11 +122,28 @@
 
     let updatedElement = await response.json();
     selectedElement.set(updatedElement);
+    currentSurvey.set(updateSelectedElementInSurvey($currentSurvey, $selectedElement));
+  }
+
+  function updateSelectedElementInSurvey(surv, el){
+    const s = surv.section?.map(sec => {
+      const g = sec.group?.map(gro => {
+        const e = gro.element?.map(ele => {
+          return ele.id == el.id ? el : ele
+        })
+        gro.element = e
+        return gro
+      })
+      sec.group = g
+      return sec
+    })
+    surv.section = s
+    return surv
   }
 
 </script>
 
-<SurveyMenu data={$currentSurvey} open={drawerOpen} on:addgroup={receiceAddGroup} on:addelement={receiceAddElement} on:addsection={addSection} > <!-- on:getelementbyid={receiceGetElementById} -->
+<SurveyMenu open={drawerOpen} on:addgroup={receiceAddGroup} on:addelement={receiceAddElement} on:addsection={addSection} > <!-- on:getelementbyid={receiceGetElementById} -->
   <button on:click={() => goto(`/survey`)}>Back to Surveys</button>
   <!-- <button on:click={() => drawerOpen = !drawerOpen}>Toggle</button> -->
   <h1>
