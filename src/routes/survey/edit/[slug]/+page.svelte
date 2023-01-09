@@ -31,7 +31,7 @@
   console.log($currentSurvey)
 
   $: if(!$selectedElement) {
-    if($currentSurvey?.section?.[0].group?.[0].element?.length > 0) {
+    if($currentSurvey?.section?.[0]?.group?.[0]?.element?.length > 0) {
       selectedElement.set($currentSurvey.section[0].group[0].element[0])
     }
   }
